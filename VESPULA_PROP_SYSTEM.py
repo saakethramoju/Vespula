@@ -1,5 +1,6 @@
 from thermoprop import *
 from fullflow import *
+import fullplot as fplt
 
 from VESPULA_DATA import *
 
@@ -7,6 +8,7 @@ from VESPULA_DATA import *
 # ---- Network ---- #
 Vespula = Network("Vespula Prop System")
 
+BANG_BANG = False
 
 
 
@@ -87,32 +89,41 @@ def BangBang(t, pressure, bang_bang_state,
     if pressure < set_pressure - lower_limit: return 1.0
     return bang_bang_state
 
-LOX_BANG_BANG_STATE = State(0.0)
-FUEL_BANG_BANG_STATE = State(0.0)
+if BANG_BANG:
 
-LOXBangBang = Sequence(
-    "LOX Bang Bang",
-    Vespula,
-    target=LOX_BANG_BANG_STATE,
-    function=BangBang,
-    inputs=[LOXUllageGas.pressure, 
-            LOX_BANG_BANG_STATE, 
-            LOX_TANK_PRESSURE,
-            LOX_BANG_BANG_UPPER_LIMIT,
-            LOX_BANG_BANG_LOWER_LIMIT],
-)
+    LOX_BANG_BANG_STATE = State(0.0)
+    FUEL_BANG_BANG_STATE = State(0.0)
 
-FuelBangBang = Sequence(
-    "Fuel Bang Bang",
-    Vespula,
-    target=FUEL_BANG_BANG_STATE,
-    function=BangBang,
-    inputs=[FuelUllageGas.pressure, 
-            FUEL_BANG_BANG_STATE, 
-            FUEL_TANK_PRESSURE,
-            FUEL_BANG_BANG_UPPER_LIMIT,
-            FUEL_BANG_BANG_LOWER_LIMIT],
-)
+    LOXBangBang = Sequence(
+        "LOX Bang Bang",
+        Vespula,
+        target=LOX_BANG_BANG_STATE,
+        function=BangBang,
+        inputs=[LOXUllageGas.pressure, 
+                LOX_BANG_BANG_STATE, 
+                LOX_TANK_PRESSURE,
+                LOX_BANG_BANG_UPPER_LIMIT,
+                LOX_BANG_BANG_LOWER_LIMIT],
+    )
+
+    FuelBangBang = Sequence(
+        "Fuel Bang Bang",
+        Vespula,
+        target=FUEL_BANG_BANG_STATE,
+        function=BangBang,
+        inputs=[FuelUllageGas.pressure, 
+                FUEL_BANG_BANG_STATE, 
+                FUEL_TANK_PRESSURE,
+                FUEL_BANG_BANG_UPPER_LIMIT,
+                FUEL_BANG_BANG_LOWER_LIMIT],
+    )
+
+else:
+
+    LOX_BANG_BANG_STATE = State(1.0)
+    FUEL_BANG_BANG_STATE = State(1.0)
+
+
 
 
 def PressureRelief(t, pressure, set_pressure):
@@ -144,6 +155,92 @@ FuelReliefCondition = Sequence(
 
 
 
+LOX_TANK_LIQUID_VOLUME = State(LOX_INITIAL_PROPELLANT_VOLUME)
+FUEL_TANK_LIQUID_VOLUME = State(FUEL_INITIAL_PROPELLANT_VOLUME)
+
+LOX_TANK_EMPTY_VOLUME = 0.1 * L_TO_M3
+FUEL_TANK_EMPTY_VOLUME = 0.1 * L_TO_M3
+
+LOXNearEmptyRedline = fplt.Trace(
+    x=[0.0, 1.0e6],
+    y=[LOX_TANK_EMPTY_VOLUME, LOX_TANK_EMPTY_VOLUME],
+    name="LOX Tank Near Empty",
+    role="redline",
+)
+
+FuelNearEmptyRedline = fplt.Trace(
+    x=[0.0, 1.0e6],
+    y=[FUEL_TANK_EMPTY_VOLUME, FUEL_TANK_EMPTY_VOLUME],
+    name="Fuel Tank Near Empty",
+    role="redline",
+)
+
+LOXTankVolumeSensor = Sensor(
+    "LOX Tank Liquid Volume",
+    Vespula,
+    reading=LOX_TANK_LIQUID_VOLUME,
+    conditions=LOXNearEmptyRedline,
+)
+
+FuelTankVolumeSensor = Sensor(
+    "Fuel Tank Liquid Volume",
+    Vespula,
+    reading=FUEL_TANK_LIQUID_VOLUME,
+    conditions=FuelNearEmptyRedline,
+)
+
+TankEmptyAbort = Sequence(
+    "Tank Near Empty Abort",
+    Vespula,
+)
+
+TankEmptyAbort.abort(
+    condition=(LOXTankVolumeSensor, "LOX Tank Near Empty"),
+    message="LOX tank reached near-empty volume.",
+)
+
+TankEmptyAbort.abort(
+    condition=(FuelTankVolumeSensor, "Fuel Tank Near Empty"),
+    message="Fuel tank reached near-empty volume.",
+)
+
+
+
+
+def HiFlowLoFlow(t, pressure, switch_pressure):
+    if pressure < switch_pressure: return 1.0
+    return 0.0
+
+LOX_HI_FLOW_STATE = State(0.0)
+FUEL_HI_FLOW_STATE = State(0.0)
+
+LOXSwitchCondition = Sequence(
+    "LOX Switch Valve Condition",
+    Vespula,
+    target=LOX_HI_FLOW_STATE,
+    function=HiFlowLoFlow,
+    inputs=[COPVGas.pressure,
+            LOX_SWITCH_PRESSURE]
+)
+
+FuelSwitchCondition = Sequence(
+    "Fuel Switch Valve Condition",
+    Vespula,
+    target=FUEL_HI_FLOW_STATE,
+    function=HiFlowLoFlow,
+    inputs=[COPVGas.pressure,
+            FUEL_SWITCH_PRESSURE]
+)
+
+
+
+
+
+
+
+
+
+
 # ---- Components ---- #
 COPV = Volume(
     "COPV",
@@ -163,7 +260,7 @@ LOXLo = CompressibleOrifice(
     upstream_total_pressure=COPV.pressure,
     upstream_total_temperature=COPV.temperature,
     downstream_pressure=LOXUllageGas.pressure,
-    discharge_coefficient=1.0,#LOX_BANG_BANG_STATE,
+    discharge_coefficient=LOX_BANG_BANG_STATE,
     cross_sectional_area=LOX_LO_FLOW_ORIFICE_AREA,
     gas_constant=COPVGas.gas_constant,
     specific_heat_ratio=COPVGas.specific_heat_ratio,
@@ -177,7 +274,7 @@ FuelLo = CompressibleOrifice(
     upstream_total_pressure=COPV.pressure,
     upstream_total_temperature=COPV.temperature,
     downstream_pressure=FuelUllageGas.pressure,
-    discharge_coefficient=1.0, #FUEL_BANG_BANG_STATE,
+    discharge_coefficient=FUEL_BANG_BANG_STATE,
     cross_sectional_area=FUEL_LO_FLOW_ORIFICE_AREA,
     gas_constant=COPVGas.gas_constant,
     specific_heat_ratio=COPVGas.specific_heat_ratio,
@@ -185,13 +282,44 @@ FuelLo = CompressibleOrifice(
     upstream_static_temperature=COPV.temperature,
 )
 
-COPV.mass_flow_out = LOXLo.mass_flow + FuelLo.mass_flow
+
+LOXHi = CompressibleOrifice(
+    "LOX-Side Hi-Flow Orifice",
+    Vespula,
+    upstream_total_pressure=COPV.pressure,
+    upstream_total_temperature=COPV.temperature,
+    downstream_pressure=LOXUllageGas.pressure,
+    discharge_coefficient=LOX_BANG_BANG_STATE * LOX_HI_FLOW_STATE,
+    cross_sectional_area=LOX_HI_FLOW_ORIFICE_AREA,
+    gas_constant=COPVGas.gas_constant,
+    specific_heat_ratio=COPVGas.specific_heat_ratio,
+    upstream_static_enthalpy=COPV.enthalpy,
+    upstream_static_temperature=COPV.temperature,
+)
+
+FuelHi = CompressibleOrifice(
+    "Fuel-Side Hi-Flow Orifice",
+    Vespula,
+    upstream_total_pressure=COPV.pressure,
+    upstream_total_temperature=COPV.temperature,
+    downstream_pressure=FuelUllageGas.pressure,
+    discharge_coefficient=FUEL_BANG_BANG_STATE * FUEL_HI_FLOW_STATE,
+    cross_sectional_area=FUEL_HI_FLOW_ORIFICE_AREA,
+    gas_constant=COPVGas.gas_constant,
+    specific_heat_ratio=COPVGas.specific_heat_ratio,
+    upstream_static_enthalpy=COPV.enthalpy,
+    upstream_static_temperature=COPV.temperature,
+)
+
+
+COPV.mass_flow_out = (LOXLo.mass_flow + FuelLo.mass_flow + 
+                      LOXHi.mass_flow + FuelHi.mass_flow)
 
 LOXTank = Volume(
     "LOX Tank Liquid Node",
     Vespula,
     pressure=LOXTankLiquid.pressure,
-    volume=LOX_INITIAL_PROPELLANT_VOLUME,
+    volume=LOX_TANK_LIQUID_VOLUME,
     density=LOXTankLiquid.density,
 )
 
@@ -199,15 +327,19 @@ FuelTank = Volume(
     "Fuel Tank Liquid Node",
     Vespula,
     pressure=FuelTankLiquid.pressure,
-    volume=FUEL_INITIAL_PROPELLANT_VOLUME,
+    volume=FUEL_TANK_LIQUID_VOLUME,
     density=FuelTankLiquid.density,
 )
 
 LOX_ULLAGE_VOLUME = LOX_TANK_VOLUME - LOXTank.volume
 FUEL_ULLAGE_VOLUME = FUEL_TANK_VOLUME - FuelTank.volume
 
-LOX_EFFECTIVE_PRESSURANT_FLOW = LOXLo.mass_flow / LOX_COLLAPSE_FACTOR
-FUEL_EFFECTIVE_PRESSURANT_FLOW = FuelLo.mass_flow / FUEL_COLLAPSE_FACTOR
+LOX_PRESSURANT_FLOW = LOXLo.mass_flow + LOXHi.mass_flow
+FUEL_PRESSURANT_FLOW = FuelLo.mass_flow + FuelHi.mass_flow
+
+LOX_EFFECTIVE_PRESSURANT_FLOW = LOX_PRESSURANT_FLOW / LOX_COLLAPSE_FACTOR
+FUEL_EFFECTIVE_PRESSURANT_FLOW = FUEL_PRESSURANT_FLOW / FUEL_COLLAPSE_FACTOR
+
 
 LOXUllage = Volume(
     "LOX Ullage",
@@ -384,8 +516,8 @@ Vespula.track("COPV Pressure [psia]", COPV.pressure / PSIA_TO_PA)
 Vespula.track("COPV Temperature [K]", COPV.temperature)
 Vespula.track("LOX Tank Pressure [psia]", LOXUllageGas.pressure / PSIA_TO_PA)
 Vespula.track("Fuel Tank Pressure [psia]", FuelUllageGas.pressure / PSIA_TO_PA)
-Vespula.track("LOX Bang Bang State", LOXBangBang.target)
-Vespula.track("Fuel Bang Bang State", FuelBangBang.target)
+Vespula.track("LOX Bang Bang State", LOX_BANG_BANG_STATE)
+Vespula.track("Fuel Bang Bang State", FUEL_BANG_BANG_STATE)
 Vespula.track("Mixture Ratio", MR)
 Vespula.track("Chamber Pressure [psia]", Chamber.pressure / PSIA_TO_PA)
 Vespula.track("Chamber Temperature [K]", ChamberGas.temperature)
@@ -404,13 +536,21 @@ Vespula.track("Fuel Liquid Volume [L]", FuelTank.volume / L_TO_M3)
 Vespula.track("LOX Liquid Mass [kg]", LOXTank.mass)
 Vespula.track("Fuel Liquid Mass [kg]", FuelTank.mass)
 
+Vespula.track("LOX Hi Flow Switch State", LOX_HI_FLOW_STATE)
+Vespula.track("Fuel Hi Flow Switch State", FUEL_HI_FLOW_STATE)
+
+Vespula.track("LOX Relief Valve State", LOX_RELIEF_STATE)
+Vespula.track("Fuel Relief Valve State", FUEL_RELIEF_STATE)
+
+
+
 
 
 
 # ---- Solver ---- #
 Transient(Vespula).solve(
     dt=0.1,
-    t_final=10,
+    t_final=30,
     filename="test.h5",
     verbose=True,
     statistics=True,
