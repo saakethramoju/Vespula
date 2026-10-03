@@ -22,6 +22,9 @@ MAX_TIMESTEP                = 0.02
 MAX_TIME                    = 600
 TERMINATE_ON_APOGEE         = True
 ROTATING_EARTH              = False
+WIND_ACTIVE                 = True
+WIND_U_FILENAME             = "WIND_PROFILES/wind_u.csv"
+WIND_V_FILENAME             = "WIND_PROFILES/wind_v.csv"
 EXPORT_RESULTS              = True
 RESULTS_FILENAME            = "Vespula_6DOF_Results.h5"
 
@@ -33,7 +36,7 @@ PROP_GENERATE_CURVES        = False
 PROP_CURVE_DIRECTORY        = "VESPULA_PROP_CURVES"
 PROP_DT                     = 0.1
 PROP_T_FINAL                = 30
-PROP_BANG_BANG              = True
+PROP_BANG_BANG              = False
 PROP_TANK_EMPTY_VOLUME      = 0.1 * L_TO_M3
 PROP_VERBOSE                = True
 PROP_STATISTICS             = True
@@ -87,6 +90,14 @@ LaunchConditions = Environment(
 
 if not ROTATING_EARTH:
     LaunchConditions.earth_rotation_vector = [0.0, 0.0, 0.0]
+
+if WIND_ACTIVE:
+    LaunchConditions.set_atmospheric_model(
+        type="custom_atmosphere",
+        wind_u=WIND_U_FILENAME,
+        wind_v=WIND_V_FILENAME,
+    )
+
 
 
 
@@ -292,6 +303,7 @@ if RUN_FLIGHT:
         terminate_on_apogee=TERMINATE_ON_APOGEE
     )
 
+    VespulaFlight.plots.trajectory_3d()
 
     if EXPORT_RESULTS:
         ExportFlightResults(
