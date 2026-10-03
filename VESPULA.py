@@ -17,6 +17,7 @@ from VESPULA_DATA import *
 
 
 # ---- Flight Sim Settings ---- #
+RUN_FLIGHT                  = True
 MAX_TIMESTEP                = 0.02
 MAX_TIME                    = 600
 TERMINATE_ON_APOGEE         = True
@@ -279,20 +280,21 @@ Vespula.add_trapezoidal_fins(
 
 
 # ---- Flight Simulation ---- #
-VespulaFlight = Flight(
-    rocket=Vespula,
-    environment=LaunchConditions,
-    rail_length=RAIL_LENGTH,
-    inclination=RAIL_INCLINATION,
-    heading=RAIL_HEADING,
-    max_time_step=MAX_TIMESTEP,
-    max_time=MAX_TIME,
-    terminate_on_apogee=TERMINATE_ON_APOGEE
-)
-
-
-if EXPORT_RESULTS:
-    ExportFlightResults(
-        flight=VespulaFlight,
-        filename=RESULTS_FILENAME,
+if RUN_FLIGHT:
+    VespulaFlight = Flight(
+        rocket=Vespula,
+        environment=LaunchConditions,
+        rail_length=RAIL_LENGTH,
+        inclination=RAIL_INCLINATION,
+        heading=RAIL_HEADING,
+        max_time_step=MAX_TIMESTEP,
+        max_time=MAX_TIME,
+        terminate_on_apogee=TERMINATE_ON_APOGEE
     )
+
+
+    if EXPORT_RESULTS:
+        ExportFlightResults(
+            flight=VespulaFlight,
+            filename=RESULTS_FILENAME,
+        )
