@@ -1,8 +1,89 @@
 from pathlib import Path
 import re
-
 import h5py
 import numpy as np
+import warnings
+from rocketpy import Function
+
+
+def ExportFlightResults(flight, filename):
+    time = np.asarray(flight.solution_array[:, 0], dtype=float)
+
+    with h5py.File(filename, "w") as h5:
+        flight_group = h5.create_group("flight")
+        flight_group.attrs["description"] = "Vespula RocketPy 6-DOF Flight Results"
+        flight_group.create_dataset("time", data=time)
+        skipped = []
+
+        for name in dir(flight):
+            if name.startswith("_"):
+                continue
+
+            if name in ("solution", "solution_array", "time"):
+                continue
+
+            try:
+                with warnings.catch_warnings(record=True) as caught:
+                    warnings.simplefilter("always")
+                    value = getattr(flight, name)
+
+                    if caught:
+                        skipped.append(name)
+                        continue
+            except Exception:
+                skipped.append(name)
+                continue
+
+            if isinstance(value, Function):
+                try:
+                    inputs = value.get_inputs()
+                    if len(inputs) != 1:
+                        continue
+
+                    input_name = str(inputs[0]).lower()
+                    if "time" not in input_name and input_name not in ("t", "time"):
+                        continue
+
+                    with warnings.catch_warnings(record=True) as caught:
+                        warnings.simplefilter("always")
+                        values = np.asarray([value(t) for t in time], dtype=float)
+
+                        if caught:
+                            skipped.append(name)
+                            continue
+
+                    dataset = flight_group.create_dataset(name, data=values)
+                    outputs = value.get_outputs()
+                    if len(outputs) > 0:
+                        dataset.attrs["description"] = str(outputs[0])
+                except Exception:
+                    skipped.append(name)
+                continue
+
+            if isinstance(
+                value,
+                (bool, int, float, np.integer, np.floating),
+            ):
+                try:
+                    flight_group.create_dataset(name, data=value)
+                except Exception:
+                    skipped.append(name)
+                continue
+
+        solution = np.asarray(flight.solution_array, dtype=float)
+        raw_solution = flight_group.create_dataset("solution", data=solution)
+        raw_solution.attrs["columns"] = (
+            "time,x,y,z,vx,vy,vz,"
+            "e0,e1,e2,e3,w1,w2,w3"
+        )
+
+        if skipped:
+            flight_group.attrs["skipped_attributes"] = ", ".join(
+                sorted(set(skipped))
+            )
+
+    print(f"Flight results exported to '{filename}'.")
+
 
 
 def _safe_group_name(name):
@@ -86,16 +167,13 @@ def ExportRocketPyCurves(
     output_directory.mkdir(parents=True, exist_ok=True)
 
     with h5py.File(filename, "r") as h5:
-
         network = _find_network(h5)
-
-        run = h5[
-            f"{network}/transient/runs/base"
-        ]
+        run = h5[f"{network}/transient/runs/base"]
 
         time = np.asarray(run["time"], dtype=float)
         tracks = run["tracks"]
 
+        # Curves directly required by VESPULA.py / RocketPy.
         track_names = {
             "thrust": "Thrust [N]",
 
@@ -113,18 +191,9 @@ def ExportRocketPyCurves(
             "fuel_tank_pressure": "Fuel Tank Pressure [Pa]",
             "fuel_ullage_temperature": "Fuel Ullage Temperature [K]",
 
-            "lox_liquid_density": "LOX Liquid Density [kg/m3]",
-            "fuel_liquid_density": "Fuel Liquid Density [kg/m3]",
-
-            "copv_gas_density": "COPV Gas Density [kg/m3]",
-            "lox_ullage_gas_density": "LOX Ullage Gas Density [kg/m3]",
-            "fuel_ullage_gas_density": "Fuel Ullage Gas Density [kg/m3]",
-
+            # Needed internally only to determine the exact cutoff.
             "lox_liquid_volume": "LOX Liquid Volume [m3]",
             "fuel_liquid_volume": "Fuel Liquid Volume [m3]",
-
-            "lox_ullage_volume": "LOX Ullage Volume [m3]",
-            "fuel_ullage_volume": "Fuel Ullage Volume [m3]",
         }
 
         curves = {
@@ -145,7 +214,6 @@ def ExportRocketPyCurves(
     )
 
     cutoff = min(lox_cutoff, fuel_cutoff)
-
     export_time = _make_time_axis(time, cutoff)
 
     for name in curves:
@@ -155,6 +223,7 @@ def ExportRocketPyCurves(
             curves[name],
         )
 
+    # Only the CSV files actually consumed by VESPULA.py.
     exports = {
         "thrust.csv": (
             curves["thrust"],
@@ -215,51 +284,6 @@ def ExportRocketPyCurves(
             curves["fuel_ullage_temperature"],
             "Fuel Ullage Temperature (K)",
         ),
-
-        "lox_liquid_density.csv": (
-            curves["lox_liquid_density"],
-            "LOX Liquid Density (kg/m3)",
-        ),
-
-        "fuel_liquid_density.csv": (
-            curves["fuel_liquid_density"],
-            "Fuel Liquid Density (kg/m3)",
-        ),
-
-        "copv_gas_density.csv": (
-            curves["copv_gas_density"],
-            "COPV Gas Density (kg/m3)",
-        ),
-
-        "lox_ullage_gas_density.csv": (
-            curves["lox_ullage_gas_density"],
-            "LOX Ullage Gas Density (kg/m3)",
-        ),
-
-        "fuel_ullage_gas_density.csv": (
-            curves["fuel_ullage_gas_density"],
-            "Fuel Ullage Gas Density (kg/m3)",
-        ),
-
-        "lox_liquid_volume.csv": (
-            curves["lox_liquid_volume"],
-            "LOX Liquid Volume (m3)",
-        ),
-
-        "fuel_liquid_volume.csv": (
-            curves["fuel_liquid_volume"],
-            "Fuel Liquid Volume (m3)",
-        ),
-
-        "lox_ullage_volume.csv": (
-            curves["lox_ullage_volume"],
-            "LOX Ullage Volume (m3)",
-        ),
-
-        "fuel_ullage_volume.csv": (
-            curves["fuel_ullage_volume"],
-            "Fuel Ullage Volume (m3)",
-        ),
     }
 
     for csv_name, (values, header) in exports.items():
@@ -270,66 +294,25 @@ def ExportRocketPyCurves(
             header,
         )
 
-    combined_header = [
-        "Time (s)",
-        "Thrust (N)",
-        "LOX Liquid Mass (kg)",
-        "Fuel Liquid Mass (kg)",
-        "COPV Gas Mass (kg)",
-        "LOX Ullage Gas Mass (kg)",
-        "Fuel Ullage Gas Mass (kg)",
-        "COPV Pressure (Pa)",
-        "COPV Temperature (K)",
-        "LOX Tank Pressure (Pa)",
-        "LOX Ullage Temperature (K)",
-        "Fuel Tank Pressure (Pa)",
-        "Fuel Ullage Temperature (K)",
-        "LOX Liquid Density (kg/m3)",
-        "Fuel Liquid Density (kg/m3)",
-        "COPV Gas Density (kg/m3)",
-        "LOX Ullage Gas Density (kg/m3)",
-        "Fuel Ullage Gas Density (kg/m3)",
-        "LOX Liquid Volume (m3)",
-        "Fuel Liquid Volume (m3)",
-        "LOX Ullage Volume (m3)",
-        "Fuel Ullage Volume (m3)",
-    ]
-
-    combined_data = np.column_stack(
-        (
-            export_time,
-            curves["thrust"],
-            curves["lox_liquid_mass"],
-            curves["fuel_liquid_mass"],
-            curves["copv_gas_mass"],
-            curves["lox_ullage_gas_mass"],
-            curves["fuel_ullage_gas_mass"],
-            curves["copv_pressure"],
-            curves["copv_temperature"],
-            curves["lox_tank_pressure"],
-            curves["lox_ullage_temperature"],
-            curves["fuel_tank_pressure"],
-            curves["fuel_ullage_temperature"],
-            curves["lox_liquid_density"],
-            curves["fuel_liquid_density"],
-            curves["copv_gas_density"],
-            curves["lox_ullage_gas_density"],
-            curves["fuel_ullage_gas_density"],
-            curves["lox_liquid_volume"],
-            curves["fuel_liquid_volume"],
-            curves["lox_ullage_volume"],
-            curves["fuel_ullage_volume"],
-        )
+    # Clean out CSV files generated by older exporter versions that are no
+    # longer used by the current RocketPy model.
+    obsolete_exports = (
+        "lox_liquid_density.csv",
+        "fuel_liquid_density.csv",
+        "copv_gas_density.csv",
+        "lox_ullage_gas_density.csv",
+        "fuel_ullage_gas_density.csv",
+        "lox_liquid_volume.csv",
+        "fuel_liquid_volume.csv",
+        "lox_ullage_volume.csv",
+        "fuel_ullage_volume.csv",
+        "propulsion_curves.csv",
     )
 
-    np.savetxt(
-        output_directory / "propulsion_curves.csv",
-        combined_data,
-        delimiter=",",
-        header=",".join(combined_header),
-        comments="",
-        fmt="%.10g",
-    )
+    for csv_name in obsolete_exports:
+        path = output_directory / csv_name
+        if path.exists():
+            path.unlink()
 
     print(
         f"RocketPy propulsion curves exported to "

@@ -6,16 +6,23 @@ from rocketpy import (
     Fluid,
     MassBasedTank,
     LiquidMotor,
-    Rocket
+    Rocket,
+    Flight
 )
 from VESPULA_PROP_SYSTEM import VespulaPropSystem
-from VESPULA_PROP_EXPORT import ExportRocketPyCurves
+from VESPULA_EXPORT import ExportRocketPyCurves, ExportFlightResults
 from VESPULA_DATA import *
+
 
 
 
 # ---- Flight Sim Settings ---- #
 MAX_TIMESTEP                = 0.02
+MAX_TIME                    = 600
+TERMINATE_ON_APOGEE         = True
+ROTATING_EARTH              = False
+EXPORT_RESULTS              = True
+RESULTS_FILENAME            = "Vespula_6DOF_Results.h5"
 
 
 # ---- Prop System Settings ---- #
@@ -77,7 +84,8 @@ LaunchConditions = Environment(
     datum="WGS84",
 )
 
-
+if not ROTATING_EARTH:
+    LaunchConditions.earth_rotation_vector = [0.0, 0.0, 0.0]
 
 
 
@@ -270,4 +278,21 @@ Vespula.add_trapezoidal_fins(
 
 
 
-# Fl
+# ---- Flight Simulation ---- #
+VespulaFlight = Flight(
+    rocket=Vespula,
+    environment=LaunchConditions,
+    rail_length=RAIL_LENGTH,
+    inclination=RAIL_INCLINATION,
+    heading=RAIL_HEADING,
+    max_time_step=MAX_TIMESTEP,
+    max_time=MAX_TIME,
+    terminate_on_apogee=TERMINATE_ON_APOGEE
+)
+
+
+if EXPORT_RESULTS:
+    ExportFlightResults(
+        flight=VespulaFlight,
+        filename=RESULTS_FILENAME,
+    )
