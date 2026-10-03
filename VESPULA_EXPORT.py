@@ -18,7 +18,6 @@ def ExportFlightResults(flight, filename):
         for name in dir(flight):
             if name.startswith("_"):
                 continue
-
             if name in ("solution", "solution_array", "time"):
                 continue
 
@@ -39,7 +38,6 @@ def ExportFlightResults(flight, filename):
                     inputs = value.get_inputs()
                     if len(inputs) != 1:
                         continue
-
                     input_name = str(inputs[0]).lower()
                     if "time" not in input_name and input_name not in ("t", "time"):
                         continue
@@ -60,10 +58,7 @@ def ExportFlightResults(flight, filename):
                     skipped.append(name)
                 continue
 
-            if isinstance(
-                value,
-                (bool, int, float, np.integer, np.floating),
-            ):
+            if isinstance(value, (bool, int, float, np.integer, np.floating)):
                 try:
                     flight_group.create_dataset(name, data=value)
                 except Exception:
@@ -73,14 +68,11 @@ def ExportFlightResults(flight, filename):
         solution = np.asarray(flight.solution_array, dtype=float)
         raw_solution = flight_group.create_dataset("solution", data=solution)
         raw_solution.attrs["columns"] = (
-            "time,x,y,z,vx,vy,vz,"
-            "e0,e1,e2,e3,w1,w2,w3"
+            "time,x,y,z,vx,vy,vz,e0,e1,e2,e3,w1,w2,w3"
         )
 
         if skipped:
-            flight_group.attrs["skipped_attributes"] = ", ".join(
-                sorted(set(skipped))
-            )
+            flight_group.attrs["skipped_attributes"] = ", ".join(sorted(set(skipped)))
 
     print(f"Flight results exported to '{filename}'.")
 
