@@ -1,3 +1,13 @@
+import numpy as np
+import thermoprop
+from rocketpy import (
+    Environment,
+    CylindricalTank,
+    Fluid,
+    MassBasedTank,
+    LiquidMotor,
+    Rocket
+)
 from VESPULA_PROP_SYSTEM import VespulaPropSystem
 from VESPULA_PROP_EXPORT import ExportRocketPyCurves
 from VESPULA_DATA import *
@@ -11,7 +21,7 @@ MAX_TIMESTEP                = 0.02
 # ---- Prop System Settings ---- #
 PROP_SOLVE_PROP_SYSTEM      = False
 PROP_FILENAME               = 'VESPULA_PROP_SYSTEM.h5'
-PROP_GENERATE_CURVES        = True
+PROP_GENERATE_CURVES        = False
 PROP_CURVE_DIRECTORY        = "VESPULA_PROP_CURVES"
 PROP_DT                     = 0.1
 PROP_T_FINAL                = 30
@@ -26,7 +36,7 @@ PROP_STATISTICS             = True
 
 
 
-
+# ---- Prop System ---- #
 if PROP_SOLVE_PROP_SYSTEM:
 
     print("Solving propulsion system...")
@@ -53,3 +63,211 @@ if PROP_GENERATE_CURVES:
         output_directory=PROP_CURVE_DIRECTORY,
         tank_empty_volume=PROP_TANK_EMPTY_VOLUME,
     )
+
+
+
+
+# ---- Launch Conditions ---- #
+LaunchConditions = Environment(
+    date=(YEAR, MONTH, DAY, HOUR),
+    latitude=LATITUDE,
+    longitude=LONGITUDE,
+    elevation=LAUNCH_ELEVATION,
+    timezone=TIMEZONE,
+    datum="WGS84",
+)
+
+
+
+
+
+
+# ---- Motor Definition ---- #
+BURN_TIME = np.loadtxt(f"{PROP_CURVE_DIRECTORY}/thrust.csv", delimiter=",", skiprows=1)[-1, 0]
+
+def GN2Density(T, P):
+    GN2 = thermoprop.Fluid(
+        fluid="Nitrogen",
+        temperature=T,
+        pressure=P,
+    )
+    return GN2.density
+
+def LOXDensity(T, P):
+    LOX = thermoprop.Fluid(
+        fluid="LOX",
+        temperature=LOX_INITIAL_PROPELLANT_TEMPERATURE,
+        pressure=P,
+    )
+    return LOX.density
+
+
+def FuelDensity(T, P):
+    RP1 = thermoprop.Propellant(
+        "RP-1",
+        temperature=FUEL_INITIAL_PROPELLANT_TEMPERATURE,
+        pressure=P,
+    )
+    return RP1.density
+
+# Adjusted tank heights to make volume and radius align
+COPV_HEIGHT = COPV_VOLUME * (1 + 1e-8)/ (np.pi * COPV_RADIUS**2)
+LOX_TANK_HEIGHT = LOX_TANK_VOLUME  * (1 + 2e-6) / (np.pi * LOX_TANK_RADIUS**2)
+FUEL_TANK_HEIGHT = FUEL_TANK_VOLUME * (1 + 1e-8) / (np.pi * FUEL_TANK_RADIUS**2)
+
+COPVTankGeometry = CylindricalTank(
+    radius_function=COPV_RADIUS,
+    height=COPV_HEIGHT,
+    spherical_caps=False,
+)
+
+LOXTankGeometry = CylindricalTank(
+    radius_function=LOX_TANK_RADIUS,
+    height=LOX_TANK_HEIGHT,
+    spherical_caps=False,
+)
+
+FuelTankGeometry = CylindricalTank(
+    radius_function=FUEL_TANK_RADIUS,
+    height=FUEL_TANK_HEIGHT,
+    spherical_caps=False,
+)
+
+Pressurant = Fluid(
+    name="GN2",
+    density=GN2Density,
+)
+
+LOXPropellant = Fluid(
+    name="LOX",
+    density=LOXDensity,
+)
+
+FuelPropellant = Fluid(
+    name="RP-1",
+    density=FuelDensity,
+)
+
+COPVTank = MassBasedTank(
+    name="COPV",
+    geometry=COPVTankGeometry,
+    flux_time=BURN_TIME,
+    liquid=Fluid("Plutonium", density=1.0),
+    gas=Pressurant,
+    liquid_mass=0.0,
+    gas_mass=f"{PROP_CURVE_DIRECTORY}/copv_gas_mass.csv",
+    temperature=f"{PROP_CURVE_DIRECTORY}/copv_temperature.csv",
+    pressure=f"{PROP_CURVE_DIRECTORY}/copv_pressure.csv",
+)
+
+LOXTank = MassBasedTank(
+    name="LOX Tank",
+    geometry=LOXTankGeometry,
+    flux_time=BURN_TIME,
+    liquid=LOXPropellant,
+    gas=Pressurant,
+    liquid_mass=f"{PROP_CURVE_DIRECTORY}/lox_liquid_mass.csv",
+    gas_mass=f"{PROP_CURVE_DIRECTORY}/lox_ullage_gas_mass.csv",
+    temperature=f"{PROP_CURVE_DIRECTORY}/lox_ullage_temperature.csv",
+    pressure=f"{PROP_CURVE_DIRECTORY}/lox_tank_pressure.csv",
+    discretize=None,
+)
+
+FuelTank = MassBasedTank(
+    name="Fuel Tank",
+    geometry=FuelTankGeometry,
+    flux_time=BURN_TIME,
+    liquid=FuelPropellant,
+    gas=Pressurant,
+    liquid_mass=f"{PROP_CURVE_DIRECTORY}/fuel_liquid_mass.csv",
+    gas_mass=f"{PROP_CURVE_DIRECTORY}/fuel_ullage_gas_mass.csv",
+    temperature=f"{PROP_CURVE_DIRECTORY}/fuel_ullage_temperature.csv",
+    pressure=f"{PROP_CURVE_DIRECTORY}/fuel_tank_pressure.csv",
+    discretize=None,
+)
+
+
+VespulaEngine = LiquidMotor(
+    thrust_source=f"{PROP_CURVE_DIRECTORY}/thrust.csv",
+    dry_mass=ENGINE_MASS,
+    dry_inertia=(
+        ENGINE_I_XX,
+        ENGINE_I_YY,
+        ENGINE_I_ZZ,
+    ),
+    nozzle_radius=np.sqrt(NOZZLE_EXIT_AREA / np.pi),
+    center_of_dry_mass_position=ENGINE_CG_Z - NOZZLE_EXIT_Z,
+    nozzle_position=0.0,
+    burn_time=BURN_TIME,
+    coordinate_system_orientation="nozzle_to_combustion_chamber",
+)
+
+VespulaEngine.add_tank(
+    tank=LOXTank,
+    position=LOX_TANK_Z - NOZZLE_EXIT_Z,
+)
+
+VespulaEngine.add_tank(
+    tank=FuelTank,
+    position=FUEL_TANK_Z - NOZZLE_EXIT_Z,
+)
+
+VespulaEngine.add_tank(
+    tank=COPVTank,
+    position=COPV_Z - NOZZLE_EXIT_Z,
+)
+
+
+
+
+
+
+
+# ---- Rocket Definition ---- #
+
+Vespula = Rocket(
+    radius=VEHICLE_RADIUS,
+    mass=VEHICLE_DRY_MASS,
+    inertia=(
+        I_XX_DRY,
+        I_YY_DRY,
+        I_ZZ_DRY,
+        I_XY_DRY,
+        I_XZ_DRY,
+        I_YZ_DRY,
+    ),
+    power_off_drag=CD_POWER_OFF,
+    power_on_drag=CD_POWER_ON,
+    center_of_mass_without_motor=CG_Z_DRY,
+    coordinate_system_orientation="tail_to_nose",
+)
+
+Vespula.add_motor(
+    motor=VespulaEngine,
+    position=NOZZLE_EXIT_Z,
+)
+
+Vespula.add_nose(
+    length=NOSECONE_LENGTH,
+    kind=NOSECONE_TYPE,
+    position=NOSECONE_Z,
+)
+
+
+Vespula.add_trapezoidal_fins(
+    n=FIN_COUNT,
+    root_chord=FIN_ROOT_CHORD,
+    tip_chord=FIN_TIP_CHORD,
+    span=FIN_SPAN,
+    position=FIN_Z,
+    sweep_length=FIN_SWEEP_LENGTH,
+    cant_angle=FIN_CANT_ANGLE,
+)
+
+
+
+
+
+
+
+# Fl

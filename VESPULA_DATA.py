@@ -18,6 +18,13 @@ RAIL_LENGTH = 15
 RAIL_INCLINATION = 90.0
 RAIL_HEADING = 0.0
 LAUNCH_ELEVATION = 630
+LATITUDE = 35.3472
+LONGITUDE = -117.8101
+TIMEZONE = "America/Los_Angeles"
+YEAR = 2026
+MONTH = 4
+DAY = 11
+HOUR = 8
 
 
 # ---- VEHICLE DIMENSIONS ---- #
@@ -111,8 +118,8 @@ PRESSURANT_INITIAL_TEMPERATURE = 298.15
 
 
 # ---- AERODYNAMICS ---- #
-CD_POWER_ON = "vespula_drag_power_on_cd.csv" # Cd = f(M, alpha, beta)
-CD_POWER_OFF = "vespula_drag_power_off_cd.csv"
+CD_POWER_ON = "VESPULA_DRAG_CURVES/drag_power_on.csv" # Cd = f(M, alpha, beta)
+CD_POWER_OFF = "VESPULA_DRAG_CURVES/drag_power_off.csv"
 
 
 # ---- NOSECONE ---- #

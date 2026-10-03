@@ -106,6 +106,13 @@ def ExportRocketPyCurves(
             "lox_ullage_gas_mass": "LOX Ullage Gas Mass [kg]",
             "fuel_ullage_gas_mass": "Fuel Ullage Gas Mass [kg]",
 
+            "copv_pressure": "COPV Pressure [Pa]",
+            "copv_temperature": "COPV Temperature [K]",
+            "lox_tank_pressure": "LOX Tank Pressure [Pa]",
+            "lox_ullage_temperature": "LOX Ullage Temperature [K]",
+            "fuel_tank_pressure": "Fuel Tank Pressure [Pa]",
+            "fuel_ullage_temperature": "Fuel Ullage Temperature [K]",
+
             "lox_liquid_density": "LOX Liquid Density [kg/m3]",
             "fuel_liquid_density": "Fuel Liquid Density [kg/m3]",
 
@@ -179,6 +186,36 @@ def ExportRocketPyCurves(
             "Fuel Ullage Gas Mass (kg)",
         ),
 
+        "copv_pressure.csv": (
+            curves["copv_pressure"],
+            "COPV Pressure (Pa)",
+        ),
+
+        "copv_temperature.csv": (
+            curves["copv_temperature"],
+            "COPV Temperature (K)",
+        ),
+
+        "lox_tank_pressure.csv": (
+            curves["lox_tank_pressure"],
+            "LOX Tank Pressure (Pa)",
+        ),
+
+        "lox_ullage_temperature.csv": (
+            curves["lox_ullage_temperature"],
+            "LOX Ullage Temperature (K)",
+        ),
+
+        "fuel_tank_pressure.csv": (
+            curves["fuel_tank_pressure"],
+            "Fuel Tank Pressure (Pa)",
+        ),
+
+        "fuel_ullage_temperature.csv": (
+            curves["fuel_ullage_temperature"],
+            "Fuel Ullage Temperature (K)",
+        ),
+
         "lox_liquid_density.csv": (
             curves["lox_liquid_density"],
             "LOX Liquid Density (kg/m3)",
@@ -241,6 +278,12 @@ def ExportRocketPyCurves(
         "COPV Gas Mass (kg)",
         "LOX Ullage Gas Mass (kg)",
         "Fuel Ullage Gas Mass (kg)",
+        "COPV Pressure (Pa)",
+        "COPV Temperature (K)",
+        "LOX Tank Pressure (Pa)",
+        "LOX Ullage Temperature (K)",
+        "Fuel Tank Pressure (Pa)",
+        "Fuel Ullage Temperature (K)",
         "LOX Liquid Density (kg/m3)",
         "Fuel Liquid Density (kg/m3)",
         "COPV Gas Density (kg/m3)",
@@ -261,6 +304,12 @@ def ExportRocketPyCurves(
             curves["copv_gas_mass"],
             curves["lox_ullage_gas_mass"],
             curves["fuel_ullage_gas_mass"],
+            curves["copv_pressure"],
+            curves["copv_temperature"],
+            curves["lox_tank_pressure"],
+            curves["lox_ullage_temperature"],
+            curves["fuel_tank_pressure"],
+            curves["fuel_ullage_temperature"],
             curves["lox_liquid_density"],
             curves["fuel_liquid_density"],
             curves["copv_gas_density"],
