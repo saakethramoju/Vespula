@@ -12,6 +12,7 @@ from rocketpy import (
 from VESPULA_PROP_SYSTEM import VespulaPropSystem
 from VESPULA_EXPORT import ExportRocketPyCurves, ExportFlightResults
 from VESPULA_DATA import *
+from VESPULA_CANTED_FLIGHT import CantedThrustFlight
 
 
 
@@ -25,7 +26,7 @@ ROTATING_EARTH              = False
 WIND_ACTIVE                 = True
 WIND_U_FILENAME             = "WIND_PROFILES/wind_u.csv"
 WIND_V_FILENAME             = "WIND_PROFILES/wind_v.csv"
-THRUST_MISALIGNMENT_ACTIVE  = False
+THRUST_MISALIGNMENT_ACTIVE  = True
 EXPORT_RESULTS              = True
 RESULTS_FILENAME            = "Vespula_6DOF_Results.h5"
 
@@ -268,18 +269,6 @@ Vespula.add_motor(
     position=NOZZLE_EXIT_Z,
 )
 
-if THRUST_MISALIGNMENT_ACTIVE:
-    thrust_eccentricity = (
-        Vespula.nozzle_to_cdm
-        * np.sin(np.deg2rad(THRUST_MISALIGNMENT_ANGLE))
-    )
-
-    Vespula.add_thrust_eccentricity(
-        x=thrust_eccentricity,
-        y=0.0,
-    )
-
-
 Vespula.add_nose(
     length=NOSECONE_LENGTH,
     kind=NOSECONE_TYPE,
@@ -305,7 +294,9 @@ Vespula.add_trapezoidal_fins(
 
 # ---- Flight Simulation ---- #
 if RUN_FLIGHT:
-    VespulaFlight = Flight(
+    FlightModel = CantedThrustFlight if THRUST_MISALIGNMENT_ACTIVE else Flight
+
+    flight_kwargs = dict(
         rocket=Vespula,
         environment=LaunchConditions,
         rail_length=RAIL_LENGTH,
@@ -313,10 +304,19 @@ if RUN_FLIGHT:
         heading=RAIL_HEADING,
         max_time_step=MAX_TIMESTEP,
         max_time=MAX_TIME,
-        terminate_on_apogee=TERMINATE_ON_APOGEE
+        terminate_on_apogee=TERMINATE_ON_APOGEE,
     )
 
-    #VespulaFlight.plots.trajectory_3d()
+    if THRUST_MISALIGNMENT_ACTIVE:
+        VespulaFlight = FlightModel(
+            **flight_kwargs,
+            thrust_misalignment_angle=THRUST_MISALIGNMENT_ANGLE,
+        )
+    else:
+        VespulaFlight = FlightModel(**flight_kwargs)
+
+
+    VespulaFlight.plots.trajectory_3d()
     VespulaFlight.prints.all()
 
     if EXPORT_RESULTS:
