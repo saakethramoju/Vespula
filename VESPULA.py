@@ -25,6 +25,7 @@ ROTATING_EARTH              = False
 WIND_ACTIVE                 = True
 WIND_U_FILENAME             = "WIND_PROFILES/wind_u.csv"
 WIND_V_FILENAME             = "WIND_PROFILES/wind_v.csv"
+THRUST_MISALIGNMENT_ACTIVE  = False
 EXPORT_RESULTS              = True
 RESULTS_FILENAME            = "Vespula_6DOF_Results.h5"
 
@@ -267,6 +268,18 @@ Vespula.add_motor(
     position=NOZZLE_EXIT_Z,
 )
 
+if THRUST_MISALIGNMENT_ACTIVE:
+    thrust_eccentricity = (
+        Vespula.nozzle_to_cdm
+        * np.sin(np.deg2rad(THRUST_MISALIGNMENT_ANGLE))
+    )
+
+    Vespula.add_thrust_eccentricity(
+        x=thrust_eccentricity,
+        y=0.0,
+    )
+
+
 Vespula.add_nose(
     length=NOSECONE_LENGTH,
     kind=NOSECONE_TYPE,
@@ -303,7 +316,8 @@ if RUN_FLIGHT:
         terminate_on_apogee=TERMINATE_ON_APOGEE
     )
 
-    VespulaFlight.plots.trajectory_3d()
+    #VespulaFlight.plots.trajectory_3d()
+    VespulaFlight.prints.all()
 
     if EXPORT_RESULTS:
         ExportFlightResults(
