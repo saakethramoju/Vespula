@@ -20,8 +20,8 @@ test2.py
 
 
 # Local/generated engineering files
-# *.h5
-# *.hdf5
+*.h5
+*.hdf5
 # *.csv
 *.png
 *.jpg
