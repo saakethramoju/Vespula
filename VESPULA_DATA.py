@@ -11,6 +11,7 @@ G_MM2_TO_KG_M2 = 1e-9
 CM2_TO_M2 = 1e-4
 LBF_TO_N = 4.44822
 L_TO_M3 = 1/1000
+LBM_TO_KG = 0.453592
 
 
 # ---- LAUNCH ---- #
@@ -25,6 +26,8 @@ YEAR = 2026
 MONTH = 4
 DAY = 11
 HOUR = 8
+MINUTE = 7
+SECOND = 28
 
 
 # ---- VEHICLE DIMENSIONS ---- #
@@ -37,7 +40,7 @@ X/Y: transverse vehicle axes
 VEHICLE_DIAMETER = 9.5 * IN_TO_M
 VEHICLE_RADIUS = VEHICLE_DIAMETER / 2
 VEHICLE_LENGTH = 25.80 * FT_TO_M
-VEHICLE_DRY_MASS = 130.35916 # without injector and TCA
+VEHICLE_DRY_MASS = 331 * LBM_TO_KG # without injector and TCA
 CG_X_DRY = 0.0
 CG_Y_DRY = 0.0
 CG_Z_DRY = -3.616271285
@@ -52,7 +55,7 @@ I_ZZ_DRY = 1.15621997801
 # ---- LOX ---- #
 # Tank radius and height at cylindrical approximations.
 # Tank volumes are exact.
-LOX_INITIAL_MASS = 88.0
+LOX_INITIAL_MASS = 88.0 # from Vespula 6DOF. Not used in fluid sim.
 LOX_MASS_FLOW_RATE = 3.185
 LOX_DENSITY = 1140
 LOX_TANK_Z = -5.9083
@@ -80,7 +83,7 @@ LOX_COLLAPSE_FACTOR = 1.2
 # ---- FUEL ---- #
 # Tank radius and height at cylindrical approximations.
 # Tank volumes are exact.
-FUEL_INITIAL_MASS = 41.8
+FUEL_INITIAL_MASS = 41.8 # from Vespula 6DOF. Not used in fluid sim.
 FUEL_MASS_FLOW_RATE = 1.593
 FUEL_DENSITY = 804
 FUEL_TANK_Z = -3.7518
@@ -108,7 +111,7 @@ FUEL_COLLAPSE_FACTOR = 1.2
 # ---- PRESSURANT ---- #
 # Tank radius and height at cylindrical approximations.
 # Tank volumes are exact.
-PRESSURANT_INITIAL_MASS = 17.40
+PRESSURANT_INITIAL_MASS = 17.40 # from Vespula 6DOF. Not used in fluid sim.
 COPV_Z = -1.8453
 COPV_RADIUS = 0.10464999
 COPV_HEIGHT = 1.4023661
@@ -146,7 +149,9 @@ EXPANSION_RATIO = 4.066
 PERFECTLY_EXPANDED_THRUST = 2429.085 * LBF_TO_N
 THRUST_MISALIGNMENT_ANGLE = 0.6  # deg; + tilts thrust toward +body X
 CHAMBER_VOLUME = ...
-ENGINE_MASS = 20.64084 # TCA + Injector
+TCA_MASS = 39.9 * LBM_TO_KG
+INJECTOR_MASS = 16.1 * LBM_TO_KG
+ENGINE_MASS = TCA_MASS + INJECTOR_MASS
 ENGINE_LENGTH = 0.495
 ENGINE_CG_X = 0.0
 ENGINE_CG_Y = 0.0
