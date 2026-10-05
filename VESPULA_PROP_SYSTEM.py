@@ -297,7 +297,7 @@ def VespulaPropSystem(dt:float = 0.1,
         upstream_total_pressure=COPV.pressure,
         upstream_total_temperature=COPV.temperature,
         downstream_pressure=LOXUllageGas.pressure,
-        discharge_coefficient=LOX_BANG_BANG_STATE * LOX_HI_FLOW_STATE,
+        discharge_coefficient=0.0,#LOX_BANG_BANG_STATE * LOX_HI_FLOW_STATE,
         cross_sectional_area=LOX_HI_FLOW_ORIFICE_AREA,
         gas_constant=COPVGas.gas_constant,
         specific_heat_ratio=COPVGas.specific_heat_ratio,
@@ -510,10 +510,11 @@ def VespulaPropSystem(dt:float = 0.1,
         gas_constant=ChamberGas.gas_constant,
         throat_area=THROAT_AREA,
         expansion_ratio=EXPANSION_RATIO,
-        mass_flow=Chamber.mass_flow_out,
     )
 
+    Chamber.mass_flow_out = Nozzle.mass_flow / CSTAR_EFFICIENCY
     THRUST = Nozzle.mass_flow * Nozzle.exit_velocity
+
 
 
 
