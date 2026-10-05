@@ -10,6 +10,7 @@ from rocketpy import (
     Flight
 )
 from VESPULA_PROP_SYSTEM import VespulaPropSystem
+from VESPULA_CHAMBER_MAP import VespulaChamberMap
 from VESPULA_EXPORT import ExportRocketPyCurves, ExportFlightResults
 from VESPULA_DATA import *
 from VESPULA_CANTED_FLIGHT import CantedThrustFlight
@@ -32,6 +33,8 @@ RESULTS_FILENAME            = "Vespula_6DOF_Results.h5"
 
 
 # ---- Prop System Settings ---- #
+PROP_GENERATE_CHAMBER_MAP   = True
+PROP_CHAMBER_MAP_FILEANAME  = "VESPULA_CHAMBER_MAP.h5"
 PROP_SOLVE_PROP_SYSTEM      = True
 PROP_FILENAME               = 'VESPULA_PROP_SYSTEM.h5'
 PROP_GENERATE_CURVES        = True
@@ -50,6 +53,19 @@ PROP_STATISTICS             = True
 
 
 # ---- Prop System ---- #
+if PROP_GENERATE_CHAMBER_MAP:
+
+    print("Generating chamber Pc/MR map...")
+
+    VespulaChamberMap(
+        filename=PROP_CHAMBER_MAP_FILEANAME,
+        fuel_temperature=FUEL_INITIAL_PROPELLANT_TEMPERATURE,
+        lox_temperature=LOX_INITIAL_PROPELLANT_TEMPERATURE
+    )
+
+
+
+
 if PROP_SOLVE_PROP_SYSTEM:
 
     print("Solving propulsion system...")

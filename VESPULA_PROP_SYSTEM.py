@@ -7,6 +7,7 @@ from VESPULA_DATA import *
 def VespulaPropSystem(dt:float = 0.1, 
                       t_final:float = 30,
                       filename:str = "VespulaPropSystem.h5", 
+                      chamber_map_filename:str = "VESPULA_CHAMBER_MAP.h5",
                       bang_bang:bool = True,
                       tank_empty_volume:float = 0.1 * L_TO_M3,
                       verbose:bool = False,
@@ -485,7 +486,7 @@ def VespulaPropSystem(dt:float = 0.1,
     ChamberGas = Map.from_hdf5(
         "Combustion Chamber Gas",
         Vespula,
-        "vespula_chamber_map.h5",
+        chamber_map_filename,
         group="chamber",
         inputs={
             "chamber_pressure": PC,
@@ -513,7 +514,7 @@ def VespulaPropSystem(dt:float = 0.1,
     )
 
     Chamber.mass_flow_out = Nozzle.mass_flow / CSTAR_EFFICIENCY
-    THRUST = Nozzle.mass_flow * Nozzle.exit_velocity
+    THRUST = Nozzle.mass_flow * Nozzle.exit_velocity * CF_EFFICIENCY
 
 
 
