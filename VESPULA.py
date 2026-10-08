@@ -28,20 +28,20 @@ WIND_ACTIVE                 = True
 WIND_U_FILENAME             = "WIND_PROFILES/wind_u.csv"
 WIND_V_FILENAME             = "WIND_PROFILES/wind_v.csv"
 THRUST_MISALIGNMENT_ACTIVE  = True
-EXPORT_RESULTS              = False
+EXPORT_RESULTS              = True
 RESULTS_FILENAME            = "Vespula_6DOF_Results.h5"
 
 
 # ---- Prop System Settings ---- #
-PROP_GENERATE_CHAMBER_MAP   = True
+PROP_GENERATE_CHAMBER_MAP   = False
 PROP_CHAMBER_MAP_FILEANAME  = "VESPULA_CHAMBER_MAP.h5"
-PROP_SOLVE_PROP_SYSTEM      = True
+PROP_SOLVE_PROP_SYSTEM      = False
 PROP_FILENAME               = 'VESPULA_PROP_SYSTEM.h5'
-PROP_GENERATE_CURVES        = True
+PROP_GENERATE_CURVES        = False
 PROP_CURVE_DIRECTORY        = "VESPULA_PROP_CURVES"
 PROP_DT                     = 0.1
 PROP_T_FINAL                = 30
-PROP_BANG_BANG              = False
+PROP_BANG_BANG              = False # check before generating curves
 PROP_TANK_EMPTY_VOLUME      = 0.1 * L_TO_M3
 PROP_VERBOSE                = True
 PROP_STATISTICS             = True
