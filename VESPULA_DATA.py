@@ -120,10 +120,6 @@ PRESSURANT_INITIAL_PRESSURE = 4200 * PSIA_TO_PA # not an exact value
 PRESSURANT_INITIAL_TEMPERATURE = 298.15
 
 
-# ---- AERODYNAMICS ---- #
-CD_POWER_ON = "VESPULA_DRAG_CURVES/drag_power_on.csv" # Cd = f(M, alpha, beta)
-CD_POWER_OFF = "VESPULA_DRAG_CURVES/drag_power_off.csv"
-
 
 # ---- NOSECONE ---- #
 NOSECONE_Z = 0.0
