@@ -25,8 +25,8 @@ MAX_TIME                    = 600
 TERMINATE_ON_APOGEE         = True
 ROTATING_EARTH              = False
 WIND_ACTIVE                 = True
-WIND_U_FILENAME             = "Wind_Profiles/wind_u.csv"
-WIND_V_FILENAME             = "Wind_Profiles/wind_v.csv"
+WIND_U_FILENAME             = "WIND_PROFILES/wind_u.csv"
+WIND_V_FILENAME             = "WIND_PROFILES/wind_v.csv"
 CD_POWER_ON                 = "VESPULA_DRAG_CURVES/drag_power_on.csv" # Cd = f(M, alpha, beta)
 CD_POWER_OFF                = "VESPULA_DRAG_CURVES/drag_power_off.csv"
 THRUST_MISALIGNMENT_ACTIVE  = True
