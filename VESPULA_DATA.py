@@ -40,7 +40,7 @@ X/Y: transverse vehicle axes
 VEHICLE_DIAMETER = 9.5 * IN_TO_M
 VEHICLE_RADIUS = VEHICLE_DIAMETER / 2
 VEHICLE_LENGTH = 25.43 * FT_TO_M
-VEHICLE_DRY_MASS = 331 * LBM_TO_KG # without injector and TCA
+VEHICLE_DRY_MASS = 275 * LBM_TO_KG # without injector and TCA
 CG_X_DRY = 0.0
 CG_Y_DRY = 0.0
 CG_Z_DRY = -3.616271285
