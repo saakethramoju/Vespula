@@ -1,6 +1,6 @@
 from thermoprop import Propellant, Reactants, Equilibrium
 import fullplot as fplt
-from scipy import constants
+from scipy.constants import *
 
 from VESPULA_DATA import *
 
@@ -8,8 +8,8 @@ from VESPULA_DATA import *
 def VespulaChamberMap(filename: str ="Vespula_Chamber_Map.h5",
                       lox_temperature: float = LOX_INITIAL_PROPELLANT_TEMPERATURE,
                       fuel_temperature: float = FUEL_INITIAL_PROPELLANT_TEMPERATURE,
-                      chamber_pressure_lower_limit: float = 50 * constants.psi,
-                      chamber_pressure_upper_limit: float = 500 * constants.psi,
+                      chamber_pressure_lower_limit: float = 50 * psi,
+                      chamber_pressure_upper_limit: float = 500 * psi,
                       chamber_pressure_data_points: int = 46,
                       mixture_ratio_lower_limit: float = 0.5,
                       mixture_ratio_upper_limit: float = 4.0,

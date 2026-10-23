@@ -1,6 +1,6 @@
 import numpy as np
 import thermoprop
-from scipy import constants
+from scipy.constants import *
 from rocketpy import (
     Environment,
     CylindricalTank,
@@ -45,7 +45,7 @@ PROP_CURVE_DIRECTORY        = "Vespula_Prop_Curves"
 PROP_DT                     = 0.1
 PROP_T_FINAL                = 30
 PROP_BANG_BANG              = False # check before generating curves
-PROP_TANK_EMPTY_VOLUME      = 0.1 * constants.liter
+PROP_TANK_EMPTY_VOLUME      = 0.1 * liter
 PROP_VERBOSE                = True
 PROP_STATISTICS             = True
 
