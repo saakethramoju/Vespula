@@ -165,7 +165,7 @@ def ExportRocketPyCurves(
         time = np.asarray(run["time"], dtype=float)
         tracks = run["tracks"]
 
-        # Curves directly required by VESPULA.py / RocketPy.
+        # Curves directly required by Vespula.py / RocketPy.
         track_names = {
             "thrust": "Thrust [N]",
 
@@ -215,7 +215,7 @@ def ExportRocketPyCurves(
             curves[name],
         )
 
-    # Only the CSV files actually consumed by VESPULA.py.
+    # Only the CSV files actually consumed by Vespula.py.
     exports = {
         "thrust.csv": (
             curves["thrust"],

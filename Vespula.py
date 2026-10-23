@@ -1,5 +1,6 @@
 import numpy as np
 import thermoprop
+from scipy import constants
 from rocketpy import (
     Environment,
     CylindricalTank,
@@ -25,26 +26,26 @@ MAX_TIME                    = 600
 TERMINATE_ON_APOGEE         = True
 ROTATING_EARTH              = False
 WIND_ACTIVE                 = True
-WIND_U_FILENAME             = "WIND_PROFILES/sizer_wind_u.csv"
-WIND_V_FILENAME             = "WIND_PROFILES/sizer_wind_v.csv"
-CD_POWER_ON                 = "VESPULA_DRAG_CURVES/sizer_drag_power_on.csv" # Cd = f(M, alpha, beta)
-CD_POWER_OFF                = "VESPULA_DRAG_CURVES/sizer_drag_power_off.csv"
+WIND_U_FILENAME             = "Wind_Profiles/sizer_wind_u.csv"
+WIND_V_FILENAME             = "Wind_Profiles/sizer_wind_v.csv"
+CD_POWER_ON                 = "Vespula_Drag_Curves/sizer_drag_power_on.csv" # Cd = f(M, alpha, beta)
+CD_POWER_OFF                = "Vespula_Drag_Curves/sizer_drag_power_off.csv"
 THRUST_MISALIGNMENT_ACTIVE  = True
 EXPORT_RESULTS              = True
 RESULTS_FILENAME            = "Vespula_6DOF_Results.h5"
 
 
 # ---- Prop System Settings ---- #
-PROP_GENERATE_CHAMBER_MAP   = False
-PROP_CHAMBER_MAP_FILEANAME  = "VESPULA_CHAMBER_MAP.h5"
-PROP_SOLVE_PROP_SYSTEM      = False
-PROP_FILENAME               = 'VESPULA_PROP_SYSTEM.h5'
-PROP_GENERATE_CURVES        = False
-PROP_CURVE_DIRECTORY        = "VESPULA_PROP_CURVES"
+PROP_GENERATE_CHAMBER_MAP   = True
+PROP_CHAMBER_MAP_FILEANAME  = "Vespula_Chamber_Map.h5"
+PROP_SOLVE_PROP_SYSTEM      = True
+PROP_FILENAME               = 'Vespula_Prop_System.h5'
+PROP_GENERATE_CURVES        = True
+PROP_CURVE_DIRECTORY        = "Vespula_Prop_Curves"
 PROP_DT                     = 0.1
 PROP_T_FINAL                = 30
 PROP_BANG_BANG              = False # check before generating curves
-PROP_TANK_EMPTY_VOLUME      = 0.1 * L_TO_M3
+PROP_TANK_EMPTY_VOLUME      = 0.1 * constants.liter
 PROP_VERBOSE                = True
 PROP_STATISTICS             = True
 

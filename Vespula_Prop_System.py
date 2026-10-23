@@ -1,15 +1,16 @@
 from thermoprop import *
 from fullflow import *
 import fullplot as fplt
+from scipy import constants
 
 from VESPULA_DATA import *
 
 def VespulaPropSystem(dt:float = 0.1, 
                       t_final:float = 30,
                       filename:str = "VespulaPropSystem.h5", 
-                      chamber_map_filename:str = "VESPULA_CHAMBER_MAP.h5",
+                      chamber_map_filename:str = "Vespula_Chamber_Map.h5",
                       bang_bang:bool = True,
-                      tank_empty_volume:float = 0.1 * L_TO_M3,
+                      tank_empty_volume:float = 0.1 * constants.liter,
                       verbose:bool = False,
                       statistics:bool = False):
 
@@ -399,7 +400,7 @@ def VespulaPropSystem(dt:float = 0.1,
         Vespula,
         upstream_total_pressure=LOXUllage.pressure,
         upstream_total_temperature=LOXUllage.temperature,
-        downstream_pressure=101325,
+        downstream_pressure=constants.atm,
         discharge_coefficient=LOX_RELIEF_STATE,
         cross_sectional_area=LOX_RELIEF_CDA,
         gas_constant=LOXUllageGas.gas_constant,
@@ -412,7 +413,7 @@ def VespulaPropSystem(dt:float = 0.1,
         Vespula,
         upstream_total_pressure=FuelUllage.pressure,
         upstream_total_temperature=FuelUllage.temperature,
-        downstream_pressure=101325,
+        downstream_pressure=constants.atm,
         discharge_coefficient=FUEL_RELIEF_STATE,
         cross_sectional_area=FUEL_RELIEF_CDA,
         gas_constant=FuelUllageGas.gas_constant,
@@ -523,17 +524,17 @@ def VespulaPropSystem(dt:float = 0.1,
 
 
     # ---- Tracked States ---- #
-    Vespula.track("COPV Pressure [psia]", COPV.pressure / PSIA_TO_PA)
+    Vespula.track("COPV Pressure [psia]", COPV.pressure / constants.psi)
     Vespula.track("COPV Pressure [Pa]", COPV.pressure)
     Vespula.track("COPV Temperature [K]", COPV.temperature)
     Vespula.track("COPV Gas Mass [kg]", COPV.mass)
     Vespula.track("COPV Gas Density [kg/m3]", COPV.density)
 
-    Vespula.track("LOX Tank Pressure [psia]", LOXUllageGas.pressure / PSIA_TO_PA)
+    Vespula.track("LOX Tank Pressure [psia]", LOXUllageGas.pressure / constants.psi)
     Vespula.track("LOX Tank Pressure [Pa]", LOXUllageGas.pressure)
     Vespula.track("LOX Liquid Mass [kg]", LOXTank.mass)
     Vespula.track("LOX Liquid Density [kg/m3]", LOXTank.density)
-    Vespula.track("LOX Liquid Volume [L]", LOXTank.volume / L_TO_M3)
+    Vespula.track("LOX Liquid Volume [L]", LOXTank.volume / constants.liter)
     Vespula.track("LOX Liquid Volume [m3]", LOXTank.volume)
     Vespula.track("LOX Ullage Gas Mass [kg]", LOXUllage.mass)
     Vespula.track("LOX Ullage Gas Density [kg/m3]", LOXUllage.density)
@@ -544,11 +545,11 @@ def VespulaPropSystem(dt:float = 0.1,
     Vespula.track("LOX Relief Valve State", LOX_RELIEF_STATE)
     Vespula.track("LOX Injector Mass Flow [kg/s]", LOXInjector.mass_flow)
 
-    Vespula.track("Fuel Tank Pressure [psia]", FuelUllageGas.pressure / PSIA_TO_PA)
+    Vespula.track("Fuel Tank Pressure [psia]", FuelUllageGas.pressure / constants.psi)
     Vespula.track("Fuel Tank Pressure [Pa]", FuelUllageGas.pressure)
     Vespula.track("Fuel Liquid Mass [kg]", FuelTank.mass)
     Vespula.track("Fuel Liquid Density [kg/m3]", FuelTank.density)
-    Vespula.track("Fuel Liquid Volume [L]", FuelTank.volume / L_TO_M3)
+    Vespula.track("Fuel Liquid Volume [L]", FuelTank.volume / constants.liter)
     Vespula.track("Fuel Liquid Volume [m3]", FuelTank.volume)
     Vespula.track("Fuel Ullage Gas Mass [kg]", FuelUllage.mass)
     Vespula.track("Fuel Ullage Gas Density [kg/m3]", FuelUllage.density)
@@ -560,11 +561,11 @@ def VespulaPropSystem(dt:float = 0.1,
     Vespula.track("Fuel Injector Mass Flow [kg/s]", FuelInjector.mass_flow)
 
     Vespula.track("Mixture Ratio", MR)
-    Vespula.track("Chamber Pressure [psia]", Chamber.pressure / PSIA_TO_PA)
+    Vespula.track("Chamber Pressure [psia]", Chamber.pressure / constants.psi)
     Vespula.track("Chamber Pressure [Pa]", Chamber.pressure)
     Vespula.track("Chamber Temperature [K]", ChamberGas.temperature)
     Vespula.track("Nozzle Mass Flow [kg/s]", Nozzle.mass_flow)
-    Vespula.track("Thrust [lbf]", THRUST / LBF_TO_N)
+    Vespula.track("Thrust [lbf]", THRUST / constants.pound_force)
     Vespula.track("Thrust [N]", THRUST)
         
 
